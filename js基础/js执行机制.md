@@ -28,7 +28,7 @@
   
   图解![image](https://user-images.githubusercontent.com/48582204/191678492-559e8a87-e2f3-47d4-9126-56a9cf105e13.png)
   
-  ** js执行机制实例 **
+  **js执行机制实例**
   ```js
   console.log('1');
   setTimeout(function() {
