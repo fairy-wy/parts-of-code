@@ -28,6 +28,43 @@
   
   图解![image](https://user-images.githubusercontent.com/48582204/191678492-559e8a87-e2f3-47d4-9126-56a9cf105e13.png)
   
-  
+  ** js执行机制实例 **
+  ```js
+  console.log('1');
+  setTimeout(function() {
+      console.log('2');
+      process.nextTick(function() {
+          console.log('3');
+      })
+      new Promise(function(resolve) {
+          console.log('4');
+          resolve();
+      }).then(function() {
+          console.log('5')
+      })
+  })
+  process.nextTick(function() {
+      console.log('6');
+  })
+  new Promise(function(resolve) {
+      console.log('7');
+      resolve();
+  }).then(function() {
+      console.log('8')
+  })
+
+  setTimeout(function() {
+      console.log('9');
+      process.nextTick(function() {
+          console.log('10');
+      })
+      new Promise(function(resolve) {
+          console.log('11');
+          resolve();
+      }).then(function() {
+          console.log('12')
+      })
+  })
+  ```
   
 
