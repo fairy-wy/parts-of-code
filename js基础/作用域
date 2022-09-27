@@ -1,0 +1,89 @@
+#### 前言
+作用域是可访问的变量的集合。在JavaScript中，作用域为可访问变量，对象，函数的集合，它分为局部作用域和全局作用域。作用域决定了这些变量的可访问性（可见性）。
+
+#### 全局作用域
+在代码中任何地方都能访问到的对象拥有全局作用域。一般来说以下几种情形拥有全局作用域
+  * 最外层函数外面定义的变量拥有全局作用域.
+  * 所有末定义直接赋值的变量自动声明为拥有全局作用域，
+  * 所有window对象的属性拥有全局作用域
+
+```js
+// 最外层函数外面定义的变量
+var name = 'xiaoming'
+function fn () {
+    // 末定义直接赋值的变量
+    age = 18
+}
+```
+
+#### 局部作用域（Local Scope）
+局部作用域一般只在固定的代码片段内可访问到，最常见的例如函数内部，所有在一些地方也会看到有人把这种作用域称为函数作用域，
+
+```js
+function bar () {
+    var test = 123
+}
+console.log(test)  // Uncaught ReferenceError: test is not defined
+```
+**读取函数内部变量的方式**
+* 借助 return
+```js
+function bar () {
+    var test = 123
+    return test
+}
+console.log(bar())  // 123
+```
+* 闭包
+```js
+function bar () {
+    var test = 123
+    return function () {
+        // 函数内部的子函数是可以获取函数作用域内的变量的。
+        return test
+    }
+}
+let temp = bar()
+console.log(temp())  // 123
+```
+
+#### 块状作用域
+在其他编程语言中，块状作用域是很熟悉的概念，但是在JavaScript中不被支持，就像上述知识一样，除了全局作用域就是函数作用域，一直没有自己的块状作用域。在 ES6 中已经改变了这个现象，块状作用域得到普及。可通过ES6新增命令 let 和 const 来体现。
+
+```js
+if(true) {
+    let a = 1
+    console.log(a)  //1
+}
+console.log(a)  // Uncaught ReferenceError: a is not defined
+```
+在这个代码中，if 后 {  } 就是“块”，这个里面的变量就是拥有这个块状作用域，按照规则，{  }之外是无法访问这个变量的
+
+#### 动态作用域
+在执行阶段才能决定变量的作用域，那就是动态作用域。JavaScript 默认采用词法（静态）作用域，如果要开启动态作用域请借助 bind, apply, call 等
+
+```js
+window.a = 3
+function test () {
+    console.log(this.a)
+}
+test.bind({a: 2})()  // 2
+test()  // 3
+```
+
+通俗的讲变量的作用域是在定义时决定而不是执行时决定，也就是说词法作用域取决于源码，通过静态分析就能确定，因此词法作用域也叫做静态作用域。
+
+```js
+function foo() {
+    console.log(a)  // 2
+}
+function bar() {
+    var a = 3
+    foo()
+}
+var a = 2
+bar()
+```
+
+### 作用域链
+如果一个 变量 或者其他表达式不在 “当前的作用域”，那么JavaScript机制会继续沿着作用域链向上查找直到全局作用域（global或浏览器中的window）如果找不到将不可被使用。 作用域也可以根据代码层次分层，以便子作用域可以访问父作用域，通常是指沿着链式的作用域链查找，而不能从父作用域引用子作用域中的变量和引用
