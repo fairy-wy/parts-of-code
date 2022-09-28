@@ -23,7 +23,7 @@ window.o.fn();
 这里的this为什么不是指向window，如果按照上面的理论，最终this指向的是调用它的对象，这里先说个而外话，window是js中的全局对象，我们创建的变量实际上是给window添加属性，所以这里可以用window点o对象。
 
 **注意**
-* 如果一个函数中有this，但是它没有被上一级的对象所调用，那么this指向的就是window，这里需要说明的是在js的严格版中this指向的不是window，但是我们这里不探讨严格版的问题.严格版中的默认的this不再是window，而是undefined。
+* 如果一个函数中有this，但是它没有被上一级的对象所调用，那么this指向的就是window，这里需要说明的是在js的严格版中this指向的不是window，但是我们这里不探讨严格版的问题。严格版中的默认的this不再是window，而是undefined。
 * 如果一个函数中有this，这个函数有被上一级的对象所调用，那么this指向的就是上一级的对象。
 ```js
 var o = {
