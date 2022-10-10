@@ -109,6 +109,7 @@ Promise.resolve(2)
 ```
 
 **值穿透**
+	
 .then 或者 .catch 的参数期望是函数，传入非函数就会发生值穿透；Promise方法链通过 return 传值，没有 return 就只是相互独立的任务而已
 
 ```js
