@@ -295,7 +295,29 @@ test()
 // 2
 ```
 
+#### 扩展——迭代器（iterator）
+迭代器对象本质上，就是一个指针对象。通过指针对象的next(), 用来移动指针。
 
+迭代器协议：对象必须提供一个next()，执行该方法要么返回迭代的下一项，要么就引起Stopiteration异常，以终止迭代。每调用一次next ()方法，都会返回一个对象，都会返回数据结构的当前成员的信息。这个对象有 value 和 done 两个属性，value属性返回当前位置的成员，done属性是一个布尔值，表示遍历是否结束，即是否有必要再调用一次next () 。对于遍历器来说，value：undefined和done：false属性都是可以省略的。
 
+ES6 规定，默认的 Iterator 接口部署在数据结构的Symbol.iterator属性上；或者说，一个数据结构只要有Symbol.iterator属性，就认为是可遍历的。
+
+原生具备Iterator接口的数据结构有：
+* Array
+* Map
+* Set
+* String
+* TypedArray
+* 函数的 arguments 对象
+* NodeList 对象
+
+```js
+let arr = [1,2]
+let arrIterator = arr[Symbol.iterator]()
+console.log(arrIterator)  //  Array Iterator {}
+console.log(arrIterator.next())  //  {value: 1, done: false}
+console.log(arrIterator.next())  //  {value: 2, done: false}
+console.log(arrIterator.next())  //  {value: undefined, done: true}
+```
 
 
