@@ -246,9 +246,9 @@ defineReactive 方法里，开始会声明一个 const dep = new Dep(),在 get �
 
 **Dep 类(订阅者)**
 
-通过 defineReactive 方法将 data 中的数据进行响应式后，虽然可以监听到数据的变化了，但是无法通知视图更新，此时 Dep 就是帮我们收集【究竟要通知到哪里的】。我们如何知道 data 中的某个属性被使用了，答案就是 defineReactive 中 Object.defineProperty 的 get 读取属性时候.
+依赖收集器。每个数据对应的watcher很多，需要进行管理。Dep就是依赖管理。收集数据的依赖，进行派发更新。通过原型上的depend方法在获取数据getter的时候进行依赖收集。在数据改变setter的通过notify方法进行派发更新。浏览器同一时间只能更新一个watcher,所以利用Dep.target这个属性记录当前的watcher.
 
-Dep 实际上就是对 Watcher 的一种管理，Dep收集的依赖就是Watcher，它的主要作用是用来存放 Watcher 观察者对象。我们可以把 Watcher 理解成一个中介的角色，数据发生变化时通知它，然后它再通知其他地方。
+一个data属性对应一个Dep，一个Dep对应n个Watcher（属性多次在模板中被使用时n>1：{{a}}/v-text='a'）
 
 依赖收集阶段会做下面几件事：
 
@@ -290,7 +290,7 @@ export default class Dep {
 
 **Watcher 类 (监听器)**
 
-Watcher 是一个中介，通过观察依赖，在数据发生变化时通过 Watcher 中转，通知组件更新。
+依赖本身，可以理解为一个Watcher实例就是一个依赖，数据不管是在渲染模板时使用还是computed用户计算时使用，都可以算作一个需要监听的依赖，watcher实例中记录着依赖监听的状态以及如何更新操作的方法。Watcher实例在渲染数据到真实DOM时可以创建.实例化watcher会将Dep.target置为当前的watcher，执行完更新函数后会将Dep.target置为null。Watcher 是一个中介，通过观察依赖，在数据发生变化时通过 Watcher 中转，通知组件更新。
 
 - 依赖就是 Watcher。只有 Watcher 触发的 getter 才会收集依赖，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中
 
@@ -358,6 +358,25 @@ export default class Watcher {
 * 新值为对象时，会对该值的属性进行依赖收集过程。
 * 通知该数据收集的watcher依赖,遍历每个watcher进行数据更新,这个阶段是调用该数据依赖收集器的dep.notify方法进行更新的派发。
 * 更新时会将每个watcher推到队列中，等待下一个tick到来时取出每个watcher进行run操作
+
+**原理总结**
+
+vue项目初始通过initState初始化数据，通过Observe类给对象数据增加属性__ob__(响应式数据标志)，并且将数据对象处理成响应式的对象；observe方法检查数据对象是否具有__ob__属性，其实就是检查对象是否已经被处理成响应式，如果没有__ob__属性，则通过new Observe()实例化一个；在数据对象被访问时。Dep进行依赖收集（收集的是当前的数据需要被监听的依赖。比如渲染页面的时候会访问到某些数据，此时这些数据对应的watcher就是渲染watcher,此时收集的依赖就是渲染watcherben本身；computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher），在数据被改变时，Dep管理器通过dep.notify()去触发更新，通过遍历依赖管理器中所有的watcher,通知与改变的数据相关的watcher进行update()数据更新
+
+
+**vue2.响应式原理缺陷**
+
+* 无法监听到对象属性的动态添加和删除
+
+Vue 无法检测属性的添加或移除。由于 Vue 会在初始化实例时对属性执行 getter/setter 转化，所以属性必须在 data 对象上存在才能让 Vue 将它转换为响应式的。
+
+解决方法：添加通过Vue.$set(obj,key,value)。删除通过Vue.$delete(obj,key)
+
+* 通过数组下标修改数组内容界面不会更新，无法监听到数组长度的变化
+
+通过数组下标修改数组不会触发响应，因为尤雨溪用了重写数组的方法来实现数据的响应绑定，当vue遇到push pop shift unshift splice sort reverse 的时候数组才会改变
+
+
 
 
 
