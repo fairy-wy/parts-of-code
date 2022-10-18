@@ -1,4 +1,3 @@
-
 ### 响应式原理
 
 Vue.js 实现响应式的核心是利用了 ES5 的 Object.defineProperty
@@ -74,7 +73,7 @@ function initData(vm) {
 
 **observe** 
 
-在 vue 初始化的时候，initState 方法中会调用一个方法 observe，observe 就是用来监测数据的变化,方法的作用就是给非 VNode 的对象类型数据添加一个 Observer，如果已经添加过则直接返回，否则在满足一定条件下去实例化一个 Observer 对象实例
+在 vue 初始化的时候，initState 方法中会调用一个方法 observe，observe看obj身上有没有 __ob__ 属性,如果没有的话就实例化一个 new Observer实例.
 ```js
 export function observe(value) {
   // 如果value不是对象，什么都不做
@@ -251,6 +250,11 @@ defineReactive 方法里，开始会声明一个 const dep = new Dep(),在 get �
 
 Dep 实际上就是对 Watcher 的一种管理，Dep收集的依赖就是Watcher，它的主要作用是用来存放 Watcher 观察者对象。我们可以把 Watcher 理解成一个中介的角色，数据发生变化时通知它，然后它再通知其他地方。
 
+依赖收集阶段会做下面几件事：
+
+1. 为当前的watcher(该场景下是渲染watcher)添加拥有的数据。
+2. 为当前的数据收集需要监听的依赖
+
 ```js
 let uid = 0
 export default class Dep {
@@ -292,10 +296,7 @@ Watcher 是一个中介，通过观察依赖，在数据发生变化时通过 Wa
 
 * data中属性值被访问时，会被getter函数拦截，根据我们旧有的知识体系可以知道，实例挂载前会创建一个渲染watcher。与此同时，updateComponent的逻辑会执行实例的挂载，在这个过程中，模板会被优先解析为render函数，而render函数转换成Vnode时，会访问到定义的data数据，这个时候会触发gettter进行依赖收集。而此时数据收集的依赖就是这个渲染watcher本身。
 
-依赖收集阶段会做下面几件事：
-
-1. 为当前的watcher(该场景下是渲染watcher)添加拥有的数据。
-2. 为当前的数据收集需要监听的依赖
+* computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher，其中{ lazy: true}是computed watcher的标志，最终会调用defineComputed将数据设置为响应式数据
 
 - Dep 使用发布订阅模式，当数据发生变化时，会循环依赖列表，把所有的 Watcher 都通知一遍
 - Watcher 把自己设置到全局的一个指定位置，然后读取数据，因为读取了数据，所以会触发这个数据的 getter。在 getter 中就能得到当前正在读取数据的 Watcher，并把这个 Watcher 收集到 Dep 中
@@ -349,5 +350,15 @@ export default class Watcher {
 }
 
 ```
+
+#### 派发更新
+派发更新阶段会做以下几件事：
+
+* 判断数据更改前后是否一致，如果数据相等则不进行任何派发更新操作。
+* 新值为对象时，会对该值的属性进行依赖收集过程。
+* 通知该数据收集的watcher依赖,遍历每个watcher进行数据更新,这个阶段是调用该数据依赖收集器的dep.notify方法进行更新的派发。
+* 更新时会将每个watcher推到队列中，等待下一个tick到来时取出每个watcher进行run操作
+
+
 
 
