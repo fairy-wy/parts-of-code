@@ -361,7 +361,7 @@ export default class Watcher {
 
 **原理总结**
 
-vue项目初始通过initState初始化数据，通过Observe类给对象数据增加属性__ob__(响应式数据标志)，并且将数据对象处理成响应式的对象；observe方法检查数据对象是否具有__ob__属性，其实就是检查对象是否已经被处理成响应式，如果没有__ob__属性，则通过new Observe()实例化一个；在数据对象被访问时。Dep进行依赖收集（收集的是当前的数据需要被监听的依赖。比如渲染页面的时候会访问到某些数据，此时这些数据对应的watcher就是渲染watcher,此时收集的依赖就是渲染watcherben本身；computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher），在数据被改变时，Dep管理器通过dep.notify()去触发更新，通过遍历依赖管理器中所有的watcher,通知与改变的数据相关的watcher进行update()数据更新
+vue项目初始通过initState初始化数据，通过Observe类给对象数据增加属性__ob__(响应式数据标志)，并且利用Object.defineProperty将数据对象处理成响应式的对象；observe方法检查数据对象是否具有__ob__属性，其实就是检查对象是否已经被处理成响应式，如果没有__ob__属性，则通过new Observe()实例化一个；在数据对象被访问时。Dep进行依赖收集（收集的是当前的数据需要被监听的依赖。比如渲染页面的时候会访问到某些数据，此时这些数据对应的watcher就是渲染watcher,此时收集的依赖就是渲染watcherben本身；computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher），在数据被改变时，Dep管理器通过dep.notify()去触发更新，通过遍历依赖管理器中所有的watcher,通知与改变的数据相关的watcher进行update()数据更新
 
 
 **vue2.响应式原理缺陷**
