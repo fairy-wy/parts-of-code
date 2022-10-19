@@ -12,9 +12,11 @@ MVC全名是Model View Controller，是模型(model)－视图(view)－控制器(
 
 通信方式:
 
-![通过 View 接受指令](https://s2.51cto.com/images/blog/202108/08/818b447660910e384d04ebbc5a0f5203.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
+通过 View 接受指令
+![](https://s2.51cto.com/images/blog/202108/08/818b447660910e384d04ebbc5a0f5203.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
 
-![通过controller接受指令](https://s2.51cto.com/images/blog/202108/08/b6342be5cf4823254693de685b679db5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
+通过controller接受指令
+![](https://s2.51cto.com/images/blog/202108/08/b6342be5cf4823254693de685b679db5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
 
 **MVC流程**
 
