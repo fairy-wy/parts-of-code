@@ -1,4 +1,3 @@
-
 ### MVC
 
 MVC全名是Model View Controller，是模型(model)－视图(view)－控制器(controller)的缩写，一种软件设计典范，用一种业务逻辑、数据、界面显示分离的方法组织代码，将业务逻辑聚集到一个部件里面，在改进和个性化定制界面及用户交互的同时，不需要重新编写业务逻辑。MVC 是一种使用 MVC（Model View Controller 模型-视图-控制器）设计创建 Web 应用程序的模式：
@@ -15,7 +14,7 @@ MVC全名是Model View Controller，是模型(model)－视图(view)－控制器(
 
 ![通过 View 接受指令](https://s2.51cto.com/images/blog/202108/08/818b447660910e384d04ebbc5a0f5203.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
 
-![通过controller接受指令]https://s2.51cto.com/images/blog/202108/08/b6342be5cf4823254693de685b679db5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
+![通过controller接受指令](https://s2.51cto.com/images/blog/202108/08/b6342be5cf4823254693de685b679db5.png?x-oss-process=image/watermark,size_16,text_QDUxQ1RP5Y2a5a6i,color_FFFFFF,t_30,g_se,x_10,y_10,shadow_20,type_ZmFuZ3poZW5naGVpdGk=/format,webp/resize,m_fixed,w_750)
 
 **MVC流程**
 
