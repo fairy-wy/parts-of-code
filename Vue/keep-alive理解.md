@@ -1,4 +1,3 @@
-
 ### keep-alive
 
 keep-alive 是 Vue 的内置组件，当它包裹动态组件时，会缓存不活动的组件实例，而不是销毁它们。和 transition 相似，keep-alive 是一个抽象组件：它自身不会渲染成一个 DOM 元素，也不会出现在父组件链中
@@ -7,9 +6,7 @@ keep-alive 是 Vue 的内置组件，当它包裹动态组件时，会缓存不�
 
 在组件切换过程中将状态保留在内存中，防止重复渲染DOM，减少加载时间及性能消耗，提高用户体验性。
 
-**原理**： 
-
-在 created 函数调用时将需要缓存的 VNode 节点保存在 this.cache 中,在 render（页面渲染） 时，如果 VNode 的 name 符合缓存条件（可以用 include 以及 exclude 控制），则会从 this.cache 中取出之前缓存的 VNode 实例进行渲染。
+**属性**
 
 * include: 只有名称匹配的组件会被缓存。
 * exclude: 任何名称匹配的组件都不会被缓存。
@@ -43,3 +40,19 @@ keep-alive 是 Vue 的内置组件，当它包裹动态组件时，会缓存不�
 我们知道 keep-alive 之后页面模板第一次初始化解析变成 HTML 片段后，再次进入就不在重新解析而是读取内存中的数据。
 只有当数据变化时，才使用 VirtualDOM 进行 diff 更新。所以，页面进入的数据获取应该在 activated 中也放一份。
 数据下载完毕手动操作 DOM 的部分也应该在activated中执行才会生效
+
+**原理**： 
+
+* created钩子会创建一个cache对象，用来作为缓存容器，保存vnode节点。在 created 函数调用时将需要缓存的 VNode 节点保存在 this.cache 中,
+
+* render（页面渲染）时
+  1. 先获取到插槽里的内容，用getFirstComponentChild方法获取第一个子组件，获取到该组件的name，如果有name属性就用name，没有就用tag名。
+  2. 接下来会将这个name通过include与exclude属性进行匹配，如果匹配到exclude（说明不需要进行缓存）则不进行任何操作直接返回这个组件的 vnode；
+  3. 否则的话走下一步缓存。匹配include成功后key在this.cache中查找，命中缓存时会直接从缓存中拿 vnode 的组件实例覆盖到目前的vnode上面，此时重新调整该组件key的顺序，将其从原来的地方删掉并重新放在this.keys中最后一个。
+  4. 果没有命中缓存，即该组件还没被缓存过，则以该组件的key为键，组件vnode为值，将其存入this.cache中，并且把key存入this.keys中。
+  否则将vnode存储在cache中。最后返回vnode（有缓存时该vnode的componentInstance已经被替换成缓存中的了）。
+
+* 在mounted钩子函数里，调用了pruneCache方法，以观测 include 和 exclude 的变化。如果include 或exclude 发生了变化，即表示定义需要缓存的组件的规则或者不需要缓存的组件的规则发生了变化，那么就执行pruneCache函数。在该函数内对this.cache对象进行遍历，取出每一项的name值，用其与新的缓存规则进行匹配，如果匹配不上，则表示在新的缓存规则下该组件已经不需要被缓存，则调用pruneCacheEntry函数将其从this.cache对象删除即可。
+
+
+
