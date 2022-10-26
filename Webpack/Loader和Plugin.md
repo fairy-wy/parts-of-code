@@ -256,6 +256,56 @@ module.exports = {
 }
 ```
 
+compiler和compilation区别
+
+* compiler对象包含了 Webpack 环境所有的的配置信息。这个对象在启动 webpack 时被一次性建立，并配置好所有可操作的设置，包括 options，loader 和 plugin。当在 webpack 环境中应用一个插件时，插件将收到此 compiler 对象的引用。可以使用它来访问 webpack 的主环境。
+
+* compilation对象包含了当前的模块资源、编译生成资源、变化的文件等。当运行webpack 开发环境中间件时，每当检测到一个文件变化，就会创建一个新的 compilation，从而生成一组新的编译资源。compilation 对象也提供了很多关键时机的回调，以供插件做自定义处理时选择使用。
+
+* compiler代表了整个webpack从启动到关闭的生命周期，而compilation只是代表了一次新的编译过程
+
+
+在打包目录生成一个filelist.md文件，文件的内容是将所有构建生成文件展示在一个列表中
+```js
+class FileListPlugin {
+    apply(compiler){
+        compiler.hooks.emit.tapAsync('FileListPlugin', (compilation, callback)=>{
+            var filelist = 'In this build:\n\n';
+            // 遍历所有编译过的资源文件，
+            // 对于每个文件名称，都添加一行内容。
+            for (var filename in compilation.assets) {
+                filelist += '- ' + filename + '\n';
+            }
+            // 将这个列表作为一个新的文件资源，插入到 webpack 构建中：
+            compilation.assets['filelist.md'] = {
+                source: function() {
+                    return filelist;
+                },
+                size: function() {
+                    return filelist.length;
+                }
+            };
+            callback();
+        })
+    }
+}
+module.exports = FileListPlugin
+```
+我们这里用到了assets对象，它是所有构建文件的一个输出对象，打印出来大概长这样：
+```js
+{
+  'main.bundle.js': { source: [Function: source], size: [Function: size] },
+  'index.html': { source: [Function: source], size: [Function: size] }
+}
+```
+我们手动加入一个filelist.md文件的输出；打包后我们在dist文件夹中会发现多了这个文件
+```js
+In this build:
+
+- main.bundle.js
+- index.html
+```
+
 
 
 
