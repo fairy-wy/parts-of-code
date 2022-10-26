@@ -1,4 +1,3 @@
-
 ### Loader
 Loader可以帮助webpack将不同类型的文件转换为webpack可识别的模块
 
@@ -194,8 +193,69 @@ module.exports = {
 ```
 
 ### Plugin
+
 插件就像是一个插入到生产线中的一个功能，在特定的时机对生产线上的资源做处理。
 
 在 Webpack 运行的生命周期中会广播出许多事件，Plugin 可以监听这些事件，在合适的时机通过Webpack提供的API改变输出结果。和手写loader一样，
 
- 
+ #### Tapable
+
+ webpack核心机制为事件流机制，将各个插件串联起来，而完成这些的核心就是tapable。Tapable 事件流机制保证了插件的有序性，只需要插件监听webpack广播出来的关心的事件即可。webpack中最核心的负责编译的Compiler和负责创建bundles的Compilation都是Tapable的实例
+
+ Tapable 为 webpack 提供了统一的插件接口（钩子）类型定义，它是 webpack 的核心功能库。webpack 中目前有十种 hooks，
+
+ Tapable 还统一暴露了三个方法给插件，用于注入不同类型的自定义构建行为：
+
+* tap：可以注册同步钩子和异步钩子
+* tapAsync：回调方式注册异步钩子
+* tapPromise：Promise 方式注册异步钩子
+
+**自定义插件**
+
+plugin的本质是类；我们在定义plugin时，其实是在定义一个类
+
+1. webpack启动，执行new myPlugin(options)，初始化插件并获取实例
+2. 初始化complier对象，调用myPlugin.apply(complier)给插件传入complier对象
+3. 插件实例获取complier，通过complier监听webpack广播的事件，通过complier对象操作webpack
+
+```js
+// MyPlugin.js
+class MyPlugin {
+  constructor(options) {
+    console.log("Plugin被创建了");
+    console.log(options)
+    // 插件传参
+    this.options = options;
+  }
+//   apply函数，它会在webpack运行时被调用，并且注入compiler对象
+  apply (compiler) {
+    // 通过apply函数中注入的compiler对象进行注册事件  
+    // 同步注册
+    compiler.hooks.done.tap("MyPlugin", (compilation) => {
+      console.log("compilation done");
+    });
+
+    // 异步注册
+    // compiler.hooks.run.tapAsync("MyPlugin", (compilation, callback) => {
+    //   setTimeout(()=>{
+    //     console.log("compilation run");
+    //     callback()
+    //   }, 1000)
+    // });
+  }
+}
+module.exports = MyPlugin;
+```
+```js
+//webpack.config.js
+const MyPlugin = require('./plugins/MyPlugin')
+module.exports = {
+  plugins: [
+    new MyPlugin({ title: 'MyPlugin' })
+  ],
+}
+```
+
+
+
+
