@@ -10,7 +10,7 @@
 
 * 初始化参数：通过optimist将用户配置的webpack.cofig.js配置文件里的参数和shell脚本的参数以键值对的形式把参数对象保存在 optimist.argv 
 
-* 插件加载：把配置文件ebpack.cofig.js的配置项拷贝到options对象中，然后加载配置在plugins里的插件
+* 插件加载：把配置文件webpack.cofig.js的配置项拷贝到options对象中，然后加载配置在plugins里的插件
 
 
 **2. 编译和构建流程**
