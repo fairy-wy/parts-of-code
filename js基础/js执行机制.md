@@ -16,7 +16,9 @@
   
 ### 4.宏任务与微任务
   任务在广义上分为同步任务和异步任务；更精细的划分分为宏任务与微任务。
+  
   宏任务： script主代码块， setTimeout, setInterval, setImmediate,  requestAnimationFrame, I/O操作等
+  
   微任务： promise.then(), process.nextTick(), Object.observe, MutationObserver等
   
 ### 5.js执行顺序
