@@ -49,6 +49,7 @@ console.log(myObj)
 //     set hate: ƒ (value),
 //     [[Prototype]]: Object
 // }
+console.log(myObj.name)  // mini
 ```
 **底层实现**
 ```js
