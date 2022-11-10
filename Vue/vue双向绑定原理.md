@@ -24,9 +24,72 @@ v-model，被称为双向数据绑定指令，就是Vue实例对数据进行修�
 
 实现原理：
 
-动态绑定了input的value指向了变量，并且在触发input事件的时候动态的把变量设置为目标值：
+* 数据 -> 视图 Object.defineProperty劫持对象属性的值改变, set方法里影响视图
+* 视图 -> 数据 监测input/change事件, 把值赋给变量
 ```js
 <input type="text" v-model="message">
 // 相当于
 <input type="text" v-bind:value="message" v-on:input="message=$event.target.value">
+```
+实现双向绑定
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <input type="text" id="input">
+    </div>
+</body>
+</html>
+<script>
+    // 获取元素
+    var inputEle = document.getElementById('input')
+    let data = {
+      msg: "我是初始值"
+    }
+    
+
+    // 控制台打印
+    console.log(data.msg)  // 我是初始值
+
+    // 视图驱动数据  ===>  oninput事件
+    inputEle.oninput = function (event) {
+        data.msg = inputEle.value
+    }
+    // 如果在输入框输入test,此时打印的msg的值为test
+    console.log(data.msg)  // test
+
+
+    // 数据驱动视图  ===>   Object.defineProperty / proxy
+    // 使用Object.defineProperty  劫持对象属性
+//    Object.defineProperty(data, 'msg', {
+//      set (val) {
+//         inputEle.value = val
+//      },
+//      get () {
+
+//      }
+//    })
+
+   // 使用proxy 劫持整个对象
+  let temp = new Proxy(data, {
+    set: function(target, prop, val) {
+      data.msg = val;
+      inputEle.value = val
+      return Reflect.set(target, prop, val)
+    },
+    get: function(target, prop) {
+        return Reflect.get(target, prop)
+    }
+  })
+  temp.msg = '我是通过proxy实现的数据影响视图'
+  // input框中会出现 '我是通过proxy实现的数据影响视图'
+</script>
+
 ```
