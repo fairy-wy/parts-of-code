@@ -9,8 +9,14 @@ vue首先会找到配置文件。在这里，定义了vue的程序入口文件�
 
 main.js文件调用关系分为三步
 
-* 确定将被挂载（替换）的元素---此处为index.html中的<div id="app"><div>。
-* 注册组件（此处只有组件App），选择其中用于替换挂载元素（第一步中的元素）的模板组件（<App/>），即用App.vue替换index.html中的<div id="app"><div>。
+* 确定将被挂载（替换）的元素---此处为index.html中的
+```html
+<div id="app"><div>
+```
+* 注册组件（此处只有组件App），选择其中用于替换挂载元素（第一步中的元素）的模板组件（<App/>），即用App.vue替换index.html中的
+```html
+<div id="app"><div>
+```
 
 * 注入路由器router：
 
