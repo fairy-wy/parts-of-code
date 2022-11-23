@@ -92,3 +92,37 @@ console.log(a)
 ```
 
 * import/export 只能在模块顶层使用，不能在函数、判断语句等代码块之中引用；require/exports 可以。
+
+### 扩展
+
+**exports和module exports**
+
+无论使用 exports 暴露成员，或是 module.exports 暴露成员，最终暴露的结果，都是以 module.exports 所指向的对象为准。
+
+module.exports 和 exports 的联系
+
+* 在 module 对象中，包含 exports 属性，而我们就是通过这个属性（module.exports），向外暴露(共享)成员的。
+
+* exports 是 node 为了简化向外共享成员的代码，提供的一个新方式，在默认情况下，exports 和 module.exports 指向的是同一个对象（为了不混淆，你可以理解为 exports 是 module.exports 对象地址的一个引用，exports 本质是一个变量）
+
+* module.exports 和 exports是全等的
+
+module.exports 和 exports 的使用注意点
+
+* 在使用 module.exports 时，我们可以将某一个对象赋值给 module.exports（module.exports = Object），也可以为 module.exports 挂载新属性（ module.exports.name = ‘zs’），这些都没有问题，你都可以在引用的文件中拿到修改后的模块成员（module.exports 所指的对象）。
+
+* 如果你将某一对象或某一变量直接赋值给了 exports（例如：const project = ‘张三’; exports = project; ），那么你在引用的文件中只能拿到一个 {}。
+
+* 原因是因为 exports 在默认情况下是指向 module.exports 对象的引用，如果为 exports 赋值了，那么也就是说 exports 不再指向 module.exports 所指的对象的地址，而我们向外共享成员的最终结果是 module.exports 所指的对象，如此便会导致错误。
+```js
+//test.js
+const object = { name: "zhangsan", age: 18 }
+exports = object;
+```
+```js
+//main.js
+const ex = require("./test")
+console.log(ex);  // 结果是一个空对象
+```
+
+总结：我们向外暴露时，是以 module.exports 为标准的，module.exports 和 exports 同指一个对象，但是最终暴露结果以 module.exports 的为准，上面的代码中，exports 改变了指向，而我们又没有为 module.exports 挂载任何的属性或方法，所以就拿到了空对象。
