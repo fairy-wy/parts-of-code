@@ -170,6 +170,12 @@ export default {
 </script>
 ```
 
+**mxins缺点**
+
+* 命名冲突：多个mixins的生命周期会融合到一起运行，但是同名属性、同名方法无法融合，可能会导致冲突
+
+* 隐式依赖：组件里可以引入多个mixin，并直接隐式调用mixin里的变量/方法，这会让我们有时候混乱 这些变量/方法 分别是哪个mixin里的？
+
 ### extends
 
 Vue.extend 属于 Vue 的全局 API，内容都是在 #app 下渲染，注册组件都是在当前位置渲染。如果要实现动态渲染组件,Vue.extend + vm.$mount 组合就派上用场了。
