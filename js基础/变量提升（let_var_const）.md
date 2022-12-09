@@ -107,7 +107,7 @@ let x = 'global'
 
 **注意**
 * let声明的变量名不可以在统一作用域不可以重复，会报错
-* 最后看 const，其实 const 和 let 只有一个区别，那就是 const 只有「创建」和「初始化」，没有「赋值」过程。const的初始化值不可以改变。
+* 最后看 const，其实 const 和 let 只有一个区别，那就是 const 只有「创建」和「初始化」，没有「赋值」过程。const的初始化值不可以改变。const定义基本数据类型，这个值是不可以修改的。那么我们用const定义对象,对象的属性是可以改变的
 
 ![图解](https://fangyinghang.com/images/let-in-js/3.jpg)
 
