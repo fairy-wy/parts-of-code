@@ -1,4 +1,3 @@
-
 ### react
 
 用于构建用户界面（视图）的js库。react是一个将数据渲染为html视图的js库
@@ -13,7 +12,7 @@
 
 JSX（JavaScript xml），是一个 JavaScript 的语法扩展.
 
-本质：本质是React.createElement(component, props, ...children)方法(ract中创建虚拟的方法)的语法糖
+本质：本质是React.createElement(component, props, ...children)方法(react中创建虚拟的方法)的语法糖
 
 作用：用于在react中简化创建虚拟DOM
 
