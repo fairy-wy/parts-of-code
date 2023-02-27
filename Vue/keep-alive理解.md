@@ -41,6 +41,40 @@ keep-alive 是 Vue 的内置组件，当它包裹动态组件时，会缓存不�
 只有当数据变化时，才使用 VirtualDOM 进行 diff 更新。所以，页面进入的数据获取应该在 activated 中也放一份。
 数据下载完毕手动操作 DOM 的部分也应该在activated中执行才会生效
 
+**使用场景**
+
+当我们在某些场景下不需要让页面重新加载时我们可以使用keep-alive
+
+* 当我们从首页–>列表页–>商详页–>再返回，这时候列表页应该是需要keep-alive
+
+* 从首页–>列表页–>商详页–>返回到列表页(需要缓存)–>返回到首页(需要缓存)–>再次进入列表页(不需要缓存)，这时候可以按需来控制页面的keep-alive
+
+在路由中设置keepAlive属性判断是否需要缓存
+```js
+{
+  path: 'list',
+  name: 'itemList', // 列表页
+  component (resolve) {
+    require(['@/pages/item/list'], resolve)
+ },
+ meta: {
+  keepAlive: true,
+  title: '列表页'
+ }
+}
+```
+使用<keep-alive>
+```html
+<div id="app" class='wrapper'>
+    <keep-alive>
+        <!-- 需要缓存的视图组件 --> 
+        <router-view v-if="$route.meta.keepAlive"></router-view>
+     </keep-alive>
+      <!-- 不需要缓存的视图组件 -->
+     <router-view v-if="!$route.meta.keepAlive"></router-view>
+</div>
+```
+    
 **原理**： 
 
 * created钩子会创建一个cache对象，用来作为缓存容器，保存vnode节点。在 created 函数调用时将需要缓存的 VNode 节点保存在 this.cache 中,
@@ -49,10 +83,15 @@ keep-alive 是 Vue 的内置组件，当它包裹动态组件时，会缓存不�
   1. 先获取到插槽里的内容，用getFirstComponentChild方法获取第一个子组件，获取到该组件的name，如果有name属性就用name，没有就用tag名。
   2. 接下来会将这个name通过include与exclude属性进行匹配，如果匹配到exclude（说明不需要进行缓存）则不进行任何操作直接返回这个组件的 vnode；
   3. 否则的话走下一步缓存。匹配include成功后key在this.cache中查找，命中缓存时会直接从缓存中拿 vnode 的组件实例覆盖到目前的vnode上面，此时重新调整该组件key的顺序，将其从原来的地方删掉并重新放在this.keys中最后一个。
-  4. 果没有命中缓存，即该组件还没被缓存过，则以该组件的key为键，组件vnode为值，将其存入this.cache中，并且把key存入this.keys中。
+  4. 如果没有命中缓存，即该组件还没被缓存过，则以该组件的key为键，组件vnode为值，将其存入this.cache中，并且把key存入this.keys中。
   否则将vnode存储在cache中。最后返回vnode（有缓存时该vnode的componentInstance已经被替换成缓存中的了）。
 
 * 在mounted钩子函数里，调用了pruneCache方法，以观测 include 和 exclude 的变化。如果include 或exclude 发生了变化，即表示定义需要缓存的组件的规则或者不需要缓存的组件的规则发生了变化，那么就执行pruneCache函数。在该函数内对this.cache对象进行遍历，取出每一项的name值，用其与新的缓存规则进行匹配，如果匹配不上，则表示在新的缓存规则下该组件已经不需要被缓存，则调用pruneCacheEntry函数将其从this.cache对象删除即可。
+    
+**总结**
+
+关于keep-alive的最强大缓存功能是在render函数中实现。首先获取组件的key值，拿到key值后去this.cache对象中去寻找是否有该值，如果有则表示该组件有缓存，即命中缓存，直接从缓存中拿 vnode 的组件实例，此时重新调整该组件key的顺序，将其从原来的地方删掉并重新放在this.keys中最后一个。如果this.cache对象中没有该key值的情况，表明该组件还没有被缓存过，则以该组件的key为键，组件vnode为值，将其存入this.cache中，并且把key存入this.keys中，此时再判断this.keys中缓存组件的数量是否超过了设置的最大缓存数量值this.max，如果超过了，则把第一个缓存组件删掉
+    
 
 
 
