@@ -1,7 +1,7 @@
 ### 响应式原理
 
 Vue.js 实现响应式的核心是利用了 ES5 的 Object.defineProperty
-
+## vue2.0响应式原理
 #### vue数据初始化
 在 Vue 的初始化阶段，_init 方法执行的时候，会执行 initState(vm) 方法，
 
