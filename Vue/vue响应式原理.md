@@ -33,7 +33,7 @@ function initState (vm) {
 
 * initProps 方法：props 的初始化主要过程，就是遍历定义的 props 配置。遍历的过程主要做两件事情：一个是调用 defineReactive 方法将组件的props数据设置为响应式数据;二是proxy(vm, "_props", key);为props做了一层代理，用户通过vm.xxx可以代理访问到vm._props上的值。
 
-* initData 方法：data在初始化选项合并时会生成一个函数，只有在执行函数时才会返回真正的数据，所以initData方法会先执行拿到组件的data数据，并且会对对象每个属性的命名进行校验，保证不能和props，methods重复。最后的核心方法是observe,observe方法（observe具体的行为是将数据对象添加一个不可枚举的属性__ob__，标志对象是一个响应式对象，并且拿到每个对象的属性值，重写getter,setter方法）是将数据对象标记为响应式对象，并对对象的每个属性进行响应式处理；proxy会对data做一层代理，直接通过vm.XXX可以代理访问到vm._data上挂载的对象属性。
+* initData 方法：data在初始化选项合并时会生成一个函数，只有在执行函数时才会返回真正的数据，所以initData方法会先执行拿到组件的data数据，并且会对对象每个属性的命名进行校验，保证不能和props，methods重复。最后的核心方法是observe,observe方法（observe具体的行为是将数据对象添加一个不可枚举的属性__ob__，标志对象是一个响应式对象，并且拿到每个对象的属性值，重写getter,setter方法）对对象的每个属性进行响应式处理；proxy会对data做一层代理，直接通过vm.XXX可以代理访问到vm._data上挂载的对象属性。
 
 ```js
 function initData(vm) {
@@ -73,7 +73,7 @@ function initData(vm) {
 
 **observe** 
 
-在 vue 初始化的时候，initState 方法中会调用一个方法 observe，observe看obj身上有没有 __ob__ 属性,如果没有的话就实例化一个 new Observer实例.
+在 vue 初始化的时候，initState 方法中会调用一个方法 observe，observe看obj身上有没有 __ob__ 属性,没有证明未被处理成响应式，如果没有的话就实例化一个 new Observer实例去给数据添加__ob__属性并且将数据处理成响应式.
 ```js
 export function observe(value) {
   // 如果value不是对象，什么都不做
@@ -84,7 +84,7 @@ export function observe(value) {
     // 判断对象是否有__ob__这个属性，可以理解为响应式标志
     ob = value.__ob__
   } else {
-    //如果没有的话就生成一个实例对象，Observer类的内部去转化生生一个响应式对象
+    //如果没有的话就生成一个实例对象，Observer类的内部去转化处理成响应式对象
     ob = new Observer(value)
   }
   return ob
@@ -375,6 +375,11 @@ Vue 无法检测属性的添加或移除。由于 Vue 会在初始化实例时�
 * 通过数组下标修改数组内容界面不会更新，无法监听到数组长度的变化
 
 通过数组下标修改数组不会触发响应，因为尤雨溪用了重写数组的方法来实现数据的响应绑定，当vue遇到push pop shift unshift splice sort reverse 的时候数组才会改变
+
+## vue3.0响应式原理
+
+vue3.0通过proxy代理实现响应式。Proxy的监听是针对一个对象的，那么对这个对象的所有操作会进入监听操作，这就完全可以代理所有属性了。为了对目标的作用主要是通过handler对象中的拦截方法拦截目标对象target的某些行为（如属性查找、赋值、枚举、函数调用等.缺点是低版本浏览器的兼容不好，只能兼容ie11及以上
+
 
 
 
