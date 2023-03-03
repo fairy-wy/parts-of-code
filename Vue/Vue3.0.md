@@ -101,6 +101,7 @@
     * 优化逻辑复用
     ```js
     //方法一：setup 在setup()中可以通过返回值return来指定哪些内容要暴露给外部使用，暴露后的内容乐意直接在模板使用
+    import {ref, reactive, onMounted} from 'vue'
     export default {
         setup() {
             // ref可以将任意类型的数据处理成响应式的
@@ -141,8 +142,9 @@
     </template>
     ```
     ```js
-    //方法二：setup  
+    //方法二：setup  以script标签形式，就不同返回，语法糖默认都给你返回了
     <script setup>
+        import {ref} from 'vue'
         const count = ref(0)   // ==>{value: 0}
         let changeCount = () => {
             count.value ++ 
