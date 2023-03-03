@@ -1,191 +1,170 @@
+### 设计目标
 
-### Vue3.0相比Vue2.0优化支处
+不以解决实际业务痛点的更新都是耍流氓，下面我们来列举一下Vue3之前我们或许会面临的问题
 
-**1. 虚拟DOM重写**
+* 随着功能的增长，复杂组件的代码变得越来越难以维护
+* 缺少一种比较「干净」的在多个组件之间提取和复用逻辑的机制
+* 类型推断不够友好
+* bundle的时间太久了
 
-Vue3.0的虚拟Dom在编译过程中新增PatchFlag的标志对静态节点和动态节点进行区分，PatchFlag是Vue在运行时生成的，用作节点标记在渲染。只有带PatchFlag的这些节点会被真正的追踪，在后续更新的过程中，Vue会知道静态节点不用管，只需要追踪带有PatchFlag的动态节点
+而 Vue3 做了哪些事情？
 
-```html
-<!-- 要编译的代码 -->
-<div>
-  <span>static<span/>
-  <span>{{ msg }}</span>
-  <span :id="hello" class="bar">{{ msg }}   </span>
-  <span @click="onClick">
-    {{msg}}
-  </span>
-</div>
-```
-```js
-// 将上述代码编译成如下render函数
-mport { createVNode as _createVNode, toDisplayString as _toDisplayString, openBlock as _openBlock, createBlock as _createBlock } from "vue"
+* 更小：
 
-export function render(_ctx, _cache) {
-  return (_openBlock(), _createBlock("div", null, [
-    _createVNode("span", null, "static"),
+    * Vue3移除一些不常用的 API。
 
-    // 下面添加了一个值为1的标记，这个标记就是PatchFlag
-    _createVNode("span", null, _toDisplayString(_ctx.msg), 1 /* TEXT */)
+    * 引入tree-shaking，可以将无用模块“剪辑”，仅打包需要的，使打包的整体体积变小了,Tree shaking是基于ES6模板语法（import与exports），主要是借助ES6模块的静态编译思想，在编译时就能确定模块的依赖关系，以及输入和输出的变量.Tree shaking无非就是做了两件事：
 
-    // 这个节点中不仅有TEXT的变化，还有PROPS变化，也就是后面数组中的id。而静态添加的class: "bar"并没有被添加到追踪中。PatchFlag变成了 9 /* TEXT, PROPS */, ["id"]
-    _createVNode("span", {
-      id: _ctx.hello,
-      class: "bar"
-    }, _toDisplayString(_ctx.msg), 9 /* TEXT, PROPS */, ["id"])
+        * 编译阶段利用ES6 Module判断哪些模块已经加载
+        * 判断那些模块和变量未被使用或者引用，进而删除对应代码
 
-    // 优化前的
-    // _createVNode("span", { onClick: _ctx.onClick }, _toDisplayString(_ctx.msg), 9 /* TEXT, PROPS */, ["onClick"])
-    // 优化后
-    _createVNode("span", {
-      onClick: _cache[1] || (_cache[1] = $event => (_ctx.onClick($event)))
-    }, _toDisplayString(_ctx.msg), 1 /* TEXT */)
-  ]))
-}
-```
-总结：
 
-* 优化前：在一个默认的Virtual Dom的diff中，需要遍历所有节点，而且每一个节点都要比较旧的props和新的props有没有变化，不可避免的会影响性能
+* 更快
 
-* 优化后：在动态更新时编译器永远只会关注真正会变的东西（即带有PatchFlag标志的节点），既跳出了Virtual Dom 更新性能瓶颈，又保留了可以手写render function的灵活性。
+    * diff算法优化：vue3在diff算法中相比vue2增加了静态标记，关于这个静态标记，其作用是为了会发生变化的地方添加一个flag标记，下次发生变化的时候直接找该地方进行比较。
 
-* 优化后：使用cacheHandlers之后，会自动会生成一个内联函数，在内联函数里面在引用当前组件最新的onClick，再把这个内联函数cache起来，第一次渲染的时候，创建这个内联函数，并将这个内联函数缓存起来，后续的更新就从缓存里面读同一个函数，同一个函数就没有更新的必要了，通过这种事件监听缓存的方式也能对性能提升起到作用。
-
-**2. proxy实现响应式原理**
-
-Proxy 对象用于定义基本操作的自定义行为（如属性查找、赋值、枚举、函数调用等）。proxy是es6新特性，为了对目标的作用主要是通过handler对象中的拦截方法拦截目标对象target的某些行为（如属性查找、赋值、枚举、函数调用等）。Proxy代理的是整个对象，不是某个特定属性。
-
-```js
-/* target: 目标对象，待要使用 Proxy 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）。 */
-/* handler: 一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理 proxy 的行为。 */ 
-const proxy = new Proxy(target, handler);
-```
-
-* 2.1 proxy的利弊
-
-优点：3.0 将带来一个基于 Proxy 的 observer 实现，它可以提供覆盖语言 (JavaScript——译注) 全范围的响应式能力，消除了当前 Vue 2 系列中基于 Object.defineProperty 所存在的一些局限，这些局限包括：对属性的添加、删除动作的监测；对数组基于下标的修改、对于 .length 修改的监测；对 Map、Set、WeakMap 和 WeakSet 的支持；
-
-缺点：低版本浏览器的兼容不好，只能兼容ie11以上
-
-* 2.2 基本API
-
-get捕获器 ===> get(target, propKey, receiver)
-
-  * target:目标对象
-  * propKey:待拦截属性名
-  * receiver: proxy实例
-  * 返回： 返回读取的属性
-  * 作用：拦截对象属性的读取
-  * 拦截操作：proxy[propKey]或者点运算符
-  * 对应Reflect： Reflect.get(target, propertyKey, [receiver])
-
- set捕获器 ===> set(target,propKey, value,receiver)
-
-  * value:新设置的属性值
-  * 返回：严格模式下返回true操作成功；否则失败，报错
-  * 作用： 拦截对象的属性赋值操作
-  * 拦截操作： proxy[propkey] = value
-  * 对应Reflect： Reflect.set(obj, prop, value, receiver)
-  * 当对象的属性writable为false时，该属性不能在拦截器中被修改
-
-deleteProperty 捕获器 ===> deleteProperty(target, propKey)
-    
-  * 返回：严格模式下只有返回true, 否则报错
-  * 作用： 拦截删除target对象的propKey属性的操作
-  * 拦截操作： delete proxy[propKey]
-  * 对应Reflect： Reflect.delete(obj, prop)
-  * 属性是不可配置属性时（configurable: false），不能删除
-
-has捕获器 ===> has(target, propKey)
-
-  * 作用: 拦截判断target对象是否含有属性propKey的操作
-  * 拦截操作： propKey in proxy; 不包含for…in循环
-  * 对应Reflect: Reflect.has(target, propKey)
-
-ownKeys 捕获器 ===> ownKeys(target)
-    
-  * 返回： 数组（数组元素必须是字符或者Symbol,其他类型报错）
-  * 作用： 拦截获取键值的操作
-  * 拦截操作： Object.getOwnPropertyNames(proxy)  Object.getOwnPropertySymbols(proxy)  Object.keys(proxy)  for…in…循环
-  * 对应Reflect： Reflect.delete(obj, prop)
-  * 对应Reflect：Reflect.ownKeys()
-
-* 2.3 原理
-
-reactive函数把对象处理成响应式
-
-利用reactive函数自己去确定哪些数据为响应式数据，如果目标对象target是readonly对象，直接返回目标对象，因为readonly对象不能设置成响应式对象；反之调用createReactiveObject函数继续流程。createReactiveObject 通过使用Proxy函数劫持target对象创建并返回响应式对象。eactive可递归调用（递归处理对象的属性还是对象的情况）
-
-track 收集依赖
-
-实现响应式，就是当数据变化后会自动实现一些功能，比如执行某些函数等。因为副作用渲染函数（effct函数）能触发组件的重新渲染而更新DOM，所以这里收集的依赖就是当数据变化后需要执行的副作用渲染函数。当执行get函数时就会收集对应组件的副作用渲染函数。
-
-依赖收集的过程会创建三个集合，分别是targetMap,depsMap以及dep。targetMap 是一个 WeakMap，其 key 值是当前的 Proxy 对象 而 value 则是该对象所对应的 depsMap。depsMap 是一个 Map，key 值为触发 getter 时的属性值，而 value 则是触发过该属性值所对应的各个 effect.
-
-trigger 分发依赖
-
-trigger就是从get函数中收集来的依赖targetMap中找到对应的函数，然后执行这些副作用渲染函数，更新DOM。
-
-**3. 生命周期**
-
-* obeforeCreate===>setup(): 组件创建之前
-* created =======> setup()：组件创建完成
-* beforeMount ===> onBeforeMount：组件挂载之前
-* mounted =======> onMounted：组件挂载完成
-* beforeUpdate ===> onBeforeUpdate：组件更新之前
-* updated =======>onUpdated：组件更新完成
-* beforedestroy ==> onBeforeUnmount：组件销毁之前
-* destroyed =====> onUnmounted：组件销毁完成
-
-**4. 组合式API（composition API）**
-
-```vue
-<template>
-  <!-- 父组件 -->
-  <div class="father">
-    <Child :name="name" :age="age" :height="height" @onAfterAYear="changeData" />
-  </div>
-</template>
-
-<script>
-import { reactive, toRefs } from 'vue'
-import Child from '@/components/child'
-
-export default {
-  name: "Father",
-  components: { Child },
-  setup () {
-    let state = reactive({
-      name: '小明',
-      age: 12,
-      height: 155
-    })
-
-    const changeData = () => {
-      state.name = '大明'
-      state.age = 13
-      state.height = 169
+    * 静态提升：Vue3中对不参与更新的元素，会做静态提升，只会被创建一次，在渲染时直接复用，这样就免去了重复的创建节点，大型应用会受益于这个改动，免去了重复的创建操作，优化了运行时候的内存占用
+    ```html
+    <span>你好</span>
+    <div>{{ message }}</div>
+    ```
+    ```js
+    // 没有做静态提升之前
+    export function render(_ctx, _cache, $props, $setup, $data, $options) {
+    return (_openBlock(), _createBlock(_Fragment, null, [
+        _createVNode("span", null, "你好"),
+        _createVNode("div", null, _toDisplayString(_ctx.message), 1 /* TEXT */)
+    ], 64 /* STABLE_FRAGMENT */))
     }
-    onMounted(() => {
-      console.log('component is onMounted')
-    })
+    ```
+    ```js
+    // 做了静态提升之后
+    const _hoisted_1 = /*#__PURE__*/_createVNode("span", null, "你好", -1 /* HOISTED */)
 
-    return {
-      ...toRefs(state),
-      onMounted,
-      changeData
+    export function render(_ctx, _cache, $props, $setup, $data, $options) {
+    return (_openBlock(), _createBlock(_Fragment, null, [
+        _hoisted_1,
+        _createVNode("div", null, _toDisplayString(_ctx.message), 1 /* TEXT */)
+    ], 64 /* STABLE_FRAGMENT */))
     }
-  }
-};
-```
+    // Check the console for the AST
+    // 静态内容_hoisted_1被放置在render 函数外，每次渲染的时候只要取 _hoisted_1 即可
+    // 同时 _hoisted_1 被打上了 PatchFlag ，静态标记值为 -1 ，特殊标志是负整数表示永远不会用于 Diff
+    ```
 
+    * 事件监听缓存：默认情况下绑定事件行为会被视为动态绑定，所以每次都会去追踪它的变化
+    ```html
+    <div>
+        <button @click = 'onClick'>点我</button>
+    </div>
+    ```
+    ```js
+    // 没开启事件监听器缓存
+    export const render = /*#__PURE__*/_withId(function render(_ctx, _cache, $props, $setup, $data, $options) {
+    return (_openBlock(), _createBlock("div", null, [
+        _createVNode("button", { onClick: _ctx.onClick }, "点我", 8 /* PROPS */, ["onClick"])
+                                                // PROPS=1<<3,// 8 //动态属性，但不包含类名和样式
+    ]))
+    })
+    ```
+    ```js
+    // 开启事件侦听器缓存后
+    export function render(_ctx, _cache, $props, $setup, $data, $options) {
+    return (_openBlock(), _createBlock("div", null, [
+        _createVNode("button", {
+        onClick: _cache[1] || (_cache[1] = (...args) => (_ctx.onClick(...args)))
+        }, "点我")
+    ]))
+    }
+    // 开启事件侦听器缓存后，会自动会生成一个内联函数，在内联函数里面在引用当前组件最新的onClick，再把这个内联函数cache起来，第一次渲染的时候，创建这个内联函数，并将这个内联函数缓存起来，后续的更新就从缓存里面读同一个函数，同一个函数就没有更新的必要了，通过这种事件监听缓存的方式也能对性能提升起到作用。
+    // 开启了缓存后，没有了静态标记。也就是说下次diff算法的时候直接使用
+    ```
 
+* 响应式原理的优化
 
+    * vue2.0通过Object.defineProproty()实现响应式，但是存在缺点如下：
 
+        * 检测不到对象属性的添加和删除（解决方法：Vue.$set和Vue.$delete进行检测）
+        * 数组API方法无法监听到（解决方法：重写数组7大方法==>push,unshift;shift,pop;splice;sort;reverse）
+        * 需要对每个属性进行遍历监听，如果嵌套对象，需要深层监听，造成性能问题
+    
+    * vue3.0通过proxy代理实现响应式。Proxy的监听是针对一个对象的，那么对这个对象的所有操作会进入监听操作，这就完全可以代理所有属性了。为了对目标的作用主要是通过handler对象中的拦截方法拦截目标对象target的某些行为（如属性查找、赋值、枚举、函数调用等.缺点是低版本浏览器的兼容不好，只能兼容ie11及以上。
 
+* TypeScript支持
 
+    * Vue3是基于typeScript编写的，提供了更好的类型检查，能支持复杂的类型推导
 
+* 组合式API：通过这种形式，我们能够更加容易维护我们的代码，将相同功能的变量和变量的操作进行一个集中式的管理。其两大显著的优化:
 
+    * 优化逻辑组织
 
+    * 优化逻辑复用
+    ```js
+    //方法一：setup 在setup()中可以通过返回值return来指定哪些内容要暴露给外部使用，暴露后的内容乐意直接在模板使用
+    export default {
+        setup() {
+            // ref可以将任意类型的数据处理成响应式的
+            // ref在生成响应式代理时，他是将值包装成一个带有value为key的对象 -->{value: 0}
+            // 修改或者访问ref对象时，必须通过 对象.value 来访问其中的值
+            // 在组件模板中，ref对象在模板中自动解包，不用使用 对象.value
+            const count = ref(0)   // ==>{value: 0}
+            let changeCount = () => {
+                count.value ++ 
+            }
+            
+            // reactive也可以将对象处理成响应式，只针对于对象,只能返回对象的响应式代理
+            // 返回一个对象的响应式代理，返回的是一个深层次的响应式对象
+            // 可以使用shallowReactive()创建一个浅层响应式对象
+            let user = reactive({
+                name:: 'zhangsan',
+                age: 18,
+                gender: '男'
+            })
+            let changeUser = () => {
+                user.age = 20
+            }
 
+            const name = 'zhangsan'  // 普通变量，不是响应式的变量，改变不会引起视图的变化
 
+            onMounted(() => console.log('component mounted!'))
+            return {
+                count,
+                changeCount,
+                user,
+            }
+        }
+    }
+    <template>
+        <p>{{count}}</p>
+        <p>{{user.name}} -- {{user.age}}</p>
+        <button @click="changeUser">点我改变</button>
+    </template>
+    ```
+    ```js
+    //方法二：setup  
+    <script setup>
+        const count = ref(0)   // ==>{value: 0}
+        let changeCount = () => {
+            count.value ++ 
+        }
+    </script>
+    <template>
+        <p>{{count}}</p>
+    </template>
+    ```
+
+* 提高自身可维护性
+
+* 开放更多底层功能
+
+* 生命周期
+
+    * obeforeCreate===>setup(): 组件创建之前
+    * created =======> setup()：组件创建完成
+    * beforeMount ===> onBeforeMount：组件挂载之前
+    * mounted =======> onMounted：组件挂载完成
+    * beforeUpdate ===> onBeforeUpdate：组件更新之前
+    * updated =======>onUpdated：组件更新完成
+    * beforedestroy ==> onBeforeUnmount：组件销毁之前
+    * destroyed =====> onUnmounted：组件销毁完成
 
