@@ -252,7 +252,7 @@ Object.defineProperty(target, key, {
 ```
 由于上一步中的响应式属性更新，触发了 计算 watcher 的 dirty 更新为 true。所以又会重新调用用户传入的 sum 函数计算出最新的值，页面上自然也就显示出了最新的值。至此为止，整个计算属性更新的流程就结束了。
 
-**总结**
+**小结**
 
 * 初始化data和computed,分别代理其set以及get方法, 对data中的所有属性生成唯一的dep实例。
 * 对computed中的sum生成唯一watcher,并保存在vm._computedWatchers中
@@ -260,6 +260,8 @@ Object.defineProperty(target, key, {
 * sum方法中访问this.count，即会调用this.count代理的get方法，将this.count的dep加入sum的watcher,同时该dep中的subs添加这个watcher。
 * 设置vm.count = 2，调用count代理的set方法触发dep的notify方法，因为是computed属性，只是将watcher中的dirty设置为true。
 * 最后一步vm.sum，访问其get方法时，得知sum的watcher.dirty为true,调用其watcher.evaluate()方法获取新的值。
+
+总结：初始刷时会为computed的计算属性生成唯一的watcher实例，并且初始化的时候值为undefined，dirty属性标识是否需要进行重新计算，初始化的时候为true,在计算属性时候会访问到data里的属性，会调用data中的响应式代理的get方法，从而计算出计算属性的值并且将dirty值置为false,下次使用直接使用缓存，不用重新计算。在data的属性值变化的时候更新方法中会将当前watcher对应的dirty置为true,如此依赖该data属性的计算属性在render访问时就会重新计算。从未达到computed缓存效果
 
 
 
