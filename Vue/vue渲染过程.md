@@ -58,10 +58,5 @@ _render 内部会执行 render 方法并返回构建好的 VNode。render 一般
 
 **总结**：渲染过程中。vue把先把模板template解析，生成AST。得到AST后，通过generate函数生成render函数。_render 开始构建 VNode，核心方法为 createElement，一般会创建普通的 VNode ，遇到组件就创建组件类型的 VNode，否则就是未知标签的 VNode，构建完成传递给 _update。patch 阶段根据 VNode 创建真实节点树，核心方法为 createElm，首先遇到组件类型的 VNode，内部会执行 $mount，再走一遍相同的流程。普通节点类型则创建一个真实节点，如果它有子节点开始递归调用 createElm，使用 insert 插入子节点，直到没有子节点就填充内容节点。最后递归完成后，同样也是使用 insert 将整个节点树插入到页面中，再将旧的根节点移除。
 
-**render函数构建vnode**
-
-_render 内部会执行 render 方法并返回构建好的 VNode。render 一般是模板编译后生成的方法，也有可能是用户自定义。render函数的creatcreateElement 方法，它是创建 VNode 的核心方法，createElement 会返回一个 VNode，也就是调用 vm._render 时创建得到的VNode。之后 VNode 会传递给 vm._update 函数，用于生成真实dom。在首次渲染时，vm.$el 对应的是根节点 dom 对象，也就是我们熟知的 id 为 app 的 div。它作为 oldVNode 参数,进过diff算法的对比新旧虚拟dom，更新虚拟dom，最后会调用 createElm 方法，它就是将 VNode 转为真实dom 渲染到页面。
-
-**总结**：初始化调用 $mount 挂载组件。vue把模板template解析，生成AST。得到AST后，通过generate函数生成render函数。_render 开始构建 VNode，核心方法为 createElement，一般会创建普通的 VNode ，遇到组件就创建组件类型的 VNode，否则就是未知标签的 VNode，构建完成传递给 _update。patch 阶段根据 VNode 创建真实节点树，核心方法为 createElm，首先遇到组件类型的 VNode，内部会执行 $mount，再走一遍相同的流程。普通节点类型则创建一个真实节点，如果它有子节点开始递归调用 createElm，使用 insert 插入子节点，直到没有子节点就填充内容节点。最后递归完成后，同样也是使用 insert 将整个节点树插入到页面中，再将旧的根节点移除。
 
 
