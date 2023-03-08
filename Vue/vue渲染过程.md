@@ -35,14 +35,28 @@ main.js文件调用关系分为三步
 
 **Vue渲染过程**
 
-* Vue 是一个构造函数，通过 new 关键字进行实例化。在实例化时，会调用 _init 进行初始化。_init 内会调用 $mount 来挂载组件，而 $mount 方法实际调用的是 mountComponent。
+**Vue渲染过程**
 
-* mountComponent 除了调用一些生命周期的钩子函数外，最主要是 updateComponent，它就是负责渲染视图的核心方法，其只有一行核心代码：
+1. 数据初始化后，开始进行模板编译。使用parse()函数通过正则等方式提取出 <template></template> 模板里的标签元素、属性、变量等信息，并解析成抽象语法树 AST（AST对象）。
+
+2. 遍历 AST 找出其中的静态节点和静态根节点，并添加标记<静态节点的static属性值为true,动态节点static属性值为false,并根据type属性值不同区分节点>（为了后面 diff算法的patch 过程中就会跳过静态节点的对比，优化性能）
+
+3. 在根据generate()函数将AST生成 render 的函数
+
+4. 在实例化时，会调用 _init 进行初始化。_init 内会调用 $mount 来挂载组件，而 $mount 方法实际调用的是 mountComponent。
+
+5. mountComponent 除了调用一些生命周期的钩子函数外，最主要是 updateComponent，它就是负责渲染视图的核心方法，其只有一行核心代码：
 ```js
 vm._update(vm._render(), hydrating)
 ```
 
-* vm._render 创建并返回 VNode，vm._update 接受 VNode 将其转为真实节点。updateComponent 会被传入 渲染Watcher，每当数据变化触发 Watcher 更新就会执行该函数，重新渲染视图。updateComponent 在传入 渲染Watcher 后会被执行一次进行初始化页面渲染。
+6. vm._render 创建并返回 VNode，vm._update 接受 VNode 将其转为真实节点。updateComponent 会被传入 渲染Watcher，每当数据变化触发 Watcher 更新就会执行该函数，重新渲染视图。updateComponent 在传入 渲染Watcher 后会被执行一次进行初始化页面渲染。
+
+**render函数构建vnode**
+
+_render 内部会执行 render 方法并返回构建好的 VNode。render 一般是模板编译后生成的方法，也有可能是用户自定义。render函数的creatcreateElement 方法，它是创建 VNode 的核心方法，createElement 会返回一个 VNode，也就是调用 vm._render 时创建得到的VNode。之后 VNode 会传递给 vm._update 函数，用于生成真实dom。在首次渲染时，vm.$el 对应的是根节点 dom 对象，也就是我们熟知的 id 为 app 的 div。它作为 oldVNode 参数,进过diff算法的对比新旧虚拟dom，更新虚拟dom，最后会调用 createElm 方法，它就是将 VNode 转为真实dom 渲染到页面。
+
+**总结**：渲染过程中。vue把先把模板template解析，生成AST。得到AST后，通过generate函数生成render函数。_render 开始构建 VNode，核心方法为 createElement，一般会创建普通的 VNode ，遇到组件就创建组件类型的 VNode，否则就是未知标签的 VNode，构建完成传递给 _update。patch 阶段根据 VNode 创建真实节点树，核心方法为 createElm，首先遇到组件类型的 VNode，内部会执行 $mount，再走一遍相同的流程。普通节点类型则创建一个真实节点，如果它有子节点开始递归调用 createElm，使用 insert 插入子节点，直到没有子节点就填充内容节点。最后递归完成后，同样也是使用 insert 将整个节点树插入到页面中，再将旧的根节点移除。
 
 **render函数构建vnode**
 
