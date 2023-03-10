@@ -140,9 +140,9 @@ module.exports = {
 }   
 ```
 
-* **externals**：防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖(external dependencies)。
+* **externals**：将不怎么需要更新的第三方库脱离webpack打包，不被打入bundle中，从而减少打包时间。防止将某些 import 的包(package)打包到 bundle 中，而是在运行时(runtime)再去从外部获取这些扩展依赖(external dependencies)。
 
-* **dlls**：dlls 技术的原理是它可以帮你在本地提前打包好指定库，然后在项目再次打包的时候直接从本地引入而不需要再次打包。
+* **dlls**：采用webpack的 DllPlugin 和 DllReferencePlugin 引入dll，让一些基本不会改动的代码先打包成静态资源,避免反复编译浪费时间。dlls 技术的原理是它可以帮你在本地提前打包好指定库，然后在项目再次打包的时候直接从本地引入而不需要再次打包。
 
 ```js
 // webpack.config.js
