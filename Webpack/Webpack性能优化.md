@@ -191,7 +191,7 @@ module.exports = {
 
 需要配合 package.json 里面 sideEffects: ["*.css"] 一同使用，否则可能会干掉打包好的 css 文件。
 
-* **code split**：代码分割技术
+* **code split**：代码分割技术。将代码按路由维度或者组件分块(chunk),这样做到按需加载,同时可以充分利用浏览器缓存
 
 ```js
 module.exports = {
@@ -221,6 +221,8 @@ import('./test').then(res=>{
   console.log(res)
 })
 ```
+
+* **提取公共第三方库**: SplitChunksPlugin插件来进行公共模块抽取,利用浏览器缓存可以长期缓存这些无需频繁变动的公共代码
 
 * **懒加载和预加载**
 
