@@ -1,5 +1,5 @@
 ### Loader
-Loader可以帮助webpack将不同类型的文件转换为webpack可识别的模块
+Loader可以帮助webpack将不同类型的文件转换为webpack可识别的js或者json模块
 
 **loader的分类**
 
@@ -194,7 +194,7 @@ module.exports = {
 
 ### Plugin
 
-插件就像是一个插入到生产线中的一个功能，在特定的时机对生产线上的资源做处理。
+Plugin直译为"插件"。Plugin可以扩展webpack的功能。插件就像是一个插入到生产线中的一个功能，在特定的时机对生产线上的资源做处理。
 
 在 Webpack 运行的生命周期中会广播出许多事件，Plugin 可以监听这些事件，在合适的时机通过Webpack提供的API改变输出结果。和手写loader一样，
 
