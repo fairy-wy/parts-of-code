@@ -98,6 +98,7 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 
 * 同步 Loader
 ```js
+const loaderUtils = require('loader-utils')
 module.exports = function (content, map, meta) {
   /*
     第一个参数：err 代表是否有错误
@@ -105,9 +106,11 @@ module.exports = function (content, map, meta) {
     第三个参数：source-map 继续传递source-map
     第四个参数：meta 给下一个loader传递参数
   */
-  this.callback(null, content, map, meta);
-  // 同步loader中不能进行异步操作
-  return; // 当调用 callback() 函数时，总是返回 undefined
+    const options = loaderUtils.getOptions(this)
+    console.log(options)
+    content += options.message
+    // 可以传递更详细的信息
+    this.callback(null, content, map, meta)
 };
 ```
 
