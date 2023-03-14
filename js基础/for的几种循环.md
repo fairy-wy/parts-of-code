@@ -296,11 +296,14 @@ test()
 ```
 
 #### 扩展——迭代器（iterator）
-迭代器对象本质上，就是一个指针对象。通过指针对象的next(), 用来移动指针。
+迭代器对象本质上，就是一个指针对象。通过指针对象的next(), 用来移动指针。在 JavaScript 中，迭代器是一个对象，它定义一个序列，并在终止时可能返回一个返回值。更具体地说，迭代器是通过使用 next() 方法实现 Iterator protocol 的任何一个对象，对象必须提供一个next()，执行该方法要么返回迭代的下一项，要么就引起Stopiteration异常，以终止迭代。每调用一次next ()方法，都会返回一个对象，都会返回数据结构的当前成员的信息，该方法返回具有两个属性的对象：
 
-迭代器协议：对象必须提供一个next()，执行该方法要么返回迭代的下一项，要么就引起Stopiteration异常，以终止迭代。每调用一次next ()方法，都会返回一个对象，都会返回数据结构的当前成员的信息。这个对象有 value 和 done 两个属性，value属性返回当前位置的成员，done属性是一个布尔值，表示遍历是否结束，即是否有必要再调用一次next () 。对于遍历器来说，value：undefined和done：false属性都是可以省略的。
+* value，这是序列中的 next 值。返回当前位置的成员
+* done，如果已经迭代到序列中的最后一个值，则它为 true.表示遍历是否结束，即是否有必要再调用一次next ()
 
 ES6 规定，默认的 Iterator 接口部署在数据结构的Symbol.iterator属性上；或者说，一个数据结构只要有Symbol.iterator属性，就认为是可遍历的。
+
+如果 value 和 done 一起存在，则它是迭代器的返回值。一旦创建，迭代器对象可以通过重复调用 next() 显式地迭代。迭代一个迭代器被称为消耗了这个迭代器，因为它通常只能执行一次。在产生终止值之后，对 next() 的额外调用应该继续返回 {done: true}。Javascript 中最常见的迭代器是 Array 迭代器，它只是按顺序返回关联数组中的每个值。虽然很容易想象所有迭代器都可以表示为数组，但事实并非如此。数组必须完整分配，但迭代器仅在必要时使用，因此可以表示无限大小的序列，例如 0 和无穷大之间的整数范围。这是一个可以做到这一点的例子。它允许创建一个简单的范围迭代器，它定义了从开始（包括）到结束（独占）间隔步长的整数序列。它的最终返回值是它创建的序列的大小，由变量 iterationCount 跟踪。
 
 原生具备Iterator接口的数据结构有：
 * Array
@@ -318,6 +321,24 @@ console.log(arrIterator)  //  Array Iterator {}
 console.log(arrIterator.next())  //  {value: 1, done: false}
 console.log(arrIterator.next())  //  {value: 2, done: false}
 console.log(arrIterator.next())  //  {value: undefined, done: true}
+
+let index = 0
+const bears = ['ice', 'panda', 'grizzly']
+
+let iterator = {
+  next() {
+    if (index < bears.length) {
+      return { done: false, value: bears[index++] }
+    }
+
+    return { done: true, value: undefined }
+  }
+}
+
+console.log(iterator.next()) //{ done: false, value: 'ice' }
+console.log(iterator.next()) //{ done: false, value: 'panda' }
+console.log(iterator.next()) //{ done: false, value: 'grizzly' }
+console.log(iterator.next()) //{ done: true, value: undefined }
 ```
 
 
