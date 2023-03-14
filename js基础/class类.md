@@ -286,6 +286,67 @@ class Child extends Father {
 Object.setPrototypeOf(Child.prototype, Father);
 ```
 
+**class类特点**
+
+* class类必须new调用，不能直接执行。class类直接执行的话会报错，而es5中的类和普通函数并没有本质区别，执行肯定是ok的。
+* class类不存在变量提升
+* class类无法遍历它实例原型链上的属性和方法
+```js
+function Foo (color) {
+    this.color = color
+}
+Foo.prototype.like = function () {
+    console.log(`like${this.color}`)
+}
+let foo = new Foo()
+for (let key in foo) {
+    // 原型上的like也被打印出来了
+    console.log(key)  // color、like
+}
+
+class Foo {
+    constructor (color) {
+        this.color = color
+    }
+    like () {
+        console.log(`like${this.color}`)
+    }
+}
+let foo = new Foo('red')
+for (let key in foo) {
+    // 只打印一个color,没有打印原型链上的like
+    console.log(key)  // color
+}
+```
+* new.target属性.es6为new命令引入了一个new.target属性，它会返回new命令作用于的那个构造函数。如果不是通过new调用或Reflect.construct()调用的，new.target会返回undefined
+```js
+function Person(name) {
+  if (new.target === Person) {
+    this.name = name;
+  } else {
+    throw new Error('必须使用 new 命令生成实例');
+  }
+}
+
+let obj = {}
+Person.call(obj, 'red') // 此时使用非new的调用方式就会报错
+```
+* class类有static静态方法.static静态方法只能通过类调用，不会出现在实例上；另外如果静态方法包含 this 关键字，这个 this 指的是类，而不是实例。static声明的静态属性和方法都不可以被子类继承。
+```js
+class Foo {
+  static bar() {
+    this.baz(); // 此处的this指向类
+  }
+  static baz() {
+    console.log('hello'); // 不会出现在实例中
+  }
+  baz() {
+    console.log('world');
+  }
+}
+
+Foo.bar() // hello
+```
 总结： 
 
 1. 类中的构造器constructor不是必须写得，要对实例进行一些初始化操作才写，如添加特定的属性
