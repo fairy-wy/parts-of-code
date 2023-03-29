@@ -186,12 +186,8 @@ extends是一个选项，主要是为了便于扩展单文件组件。只不过�
 
 * 组件模板都是事先定义好的，如果我要从接口动态渲染组件怎么办？
 * 所有内容都是在 #app下渲染，注册组件都是在当前位置渲染。如果我要实现一个类似于 window.alert()提示组件要求像调用 JS 函数一样调用它，该怎么办？
-( 这时候，Vue.extend + vm.$mount 组合就派上用场了。
+* 这时候，Vue.extend + vm.$mount 组合就派上用场了。
 
-作者：阐释之林
-链接：https://juejin.cn/post/6844903983954264071
-来源：稀土掘金
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
 Vue.extend 属于 Vue 的全局 API，内容都是在 #app 下渲染，注册组件都是在当前位置渲染。如果要实现动态渲染组件,Vue.extend + vm.$mount 组合就派上用场了。
 
 extend 创建的是 Vue 构造器，而不是我们平时常写的组件实例，所以不可以通过 new Vue({ components: testExtend }) 来直接使用，需要通过 new Profile().$mount(’#mount-point’) 来挂载到指定的元素上。
