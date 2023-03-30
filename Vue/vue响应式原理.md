@@ -93,7 +93,7 @@ export function observe(value) {
 
 **Observer 类（观察者）**
 
-这个类的目的是将数据变成响应式对象，利用Object.defineProperty对数据的getter,setter方法进行改写。在数据读取getter阶段我们会进行依赖的收集，在数据的修改setter阶段，我们会进行依赖的更新.因此在数据初始化阶段，我们会利用Observer这个类为data添加一个__ob__属性， __ob__属性是作为响应式对象的标志,将数据对象修改为相应式对象，而这是所有流程的基础。
+这个类的目的是将数据变成响应式对象，利用Object.defineProperty对数据的getter,setter方法进行改写。在数据读取getter阶段我们会进行依赖的收集，在数据的修改setter阶段，我们会进行依赖的更新.因此在数据初始化阶段，我们会利用Observer这个类为data添加一个__ob__属性， __ob__属性是作为响应式对象的标志,将数据对象修改为响应式对象，而这是所有流程的基础。
 ```js
 export default class Observer {
   constructor(value) {
