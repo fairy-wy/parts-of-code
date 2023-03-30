@@ -239,14 +239,14 @@ export default function defineReactive(data, key, val) {
 ```
 
 #### 依赖收集
-需要用到数据的地方，称为依赖.在 getter 中收集依赖，在 setter 中触发依赖。
 
-defineReactive 方法里，开始会声明一个 const dep = new Dep(),在 get 函数中通过 dep.depend 做依赖收集，set 中 dep.notify()触发依赖。
-主要有两个重要的类 Dep 类和 Watcher 类
+所谓依赖收集，就是把一个数据用到的地方收集起来，在数据发生改变的时候，统一去通知用到的地方做相应的修改操作。
+
+依赖收集发生在boforeMounted生命周期之后，而render函数转换成Vnode时，会访问到定义的data数据，从而触发getter通过 dep.depend 进行依赖收集。实际收集的是依赖数据的观察者Watcher，当数据变更时，调用dep.notify(）通知观察者Watcher更新页面数据
 
 **Dep 类(订阅者)**
 
-依赖收集器。每个数据对应的watcher很多，需要进行管理。Dep就是依赖管理。收集数据的依赖，进行派发更新。通过原型上的depend方法在获取数据getter的时候进行依赖收集。在数据改变setter的通过notify方法进行派发更新。浏览器同一时间只能更新一个watcher,所以利用Dep.target这个属性记录当前的watcher.
+依赖收集器。每个依赖数据对应的观察者Watcher很多，需要进行管理。Dep就是对这些依赖数据的观察者进行管理。收集数据依赖，进行派发更新。通过原型上的depend方法在获取数据getter的时候进行依赖收集。在数据改变setter的通过notify方法进行派发更新。浏览器同一时间只能更新一个watcher,所以利用Dep.target这个属性记录当前的watcher.
 
 一个data属性对应一个Dep，一个Dep对应n个Watcher（属性多次在模板中被使用时n>1：{{a}}/v-text='a'）
 
@@ -290,13 +290,13 @@ export default class Dep {
 
 **Watcher 类 (监听器)**
 
-依赖本身，可以理解为一个Watcher实例就是一个依赖，数据不管是在渲染模板时使用还是computed用户计算时使用，都可以算作一个需要监听的依赖，watcher实例中记录着依赖监听的状态以及如何更新操作的方法。Watcher实例在渲染数据到真实DOM时可以创建.实例化watcher会将Dep.target置为当前的watcher，执行完更新函数后会将Dep.target置为null。Watcher 是一个中介，通过观察依赖，在数据发生变化时通过 Watcher 中转，通知组件更新。
+Watcher是Vue中的观察者类，主要任务是观察Vue组件中的属性。当属性更新时作出相应的变化。在组件属性被访问时会收集每个属性的依赖，即每个属性所依赖的Watcher。当属性更新时，通过Watcher执行更新操作。
 
-- 依赖就是 Watcher。只有 Watcher 触发的 getter 才会收集依赖，哪个 Watcher 触发了 getter，就把哪个 Watcher 收集到 Dep 中
+组件挂载时，会给每个组件或者vue实例初始化即为new一个Watcher实例,并将updateComponent（组件更新函数）作为回调函数传入Watcher。为了避免重复收集依赖，为每个Watcher一个唯一的id。Watcher扮演的角色是观察者。一个组件可能会有多个Watcher。Watcher有是那种类型：一种是计算属性computed创建的computeWatcher;一种是侦听器watch创建的userWatcher;还有一种是用于渲染更新dom的renderWatcher.一个组件只有一个renderWatcher，但是会有多个computeWatcher和userWatcher。通过vue初始化的顺序可知，组件执行initState处理数据时，处理顺序是props=>methods=>data=>computed=>watch,然后最后在组件挂载阶段才实例化了渲染atcher，所以Watcher创建顺序是computeWatcher=>userWatcher=>renderWatcher
 
 * data中属性值被访问时，会被getter函数拦截，根据我们旧有的知识体系可以知道，实例挂载前会创建一个渲染watcher。与此同时，updateComponent的逻辑会执行实例的挂载，在这个过程中，模板会被优先解析为render函数，而render函数转换成Vnode时，会访问到定义的data数据，这个时候会触发gettter进行依赖收集。而此时数据收集的依赖就是这个渲染watcher本身。
 
-* computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher，其中{ lazy: true}是computed watcher的标志，最终会调用defineComputed将数据设置为响应式数据
+* computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computedWatcher其中{ lazy: true}是computed watcher的标志，最终会调用defineComputed将数据设置为响应式数据
 
 - Dep 使用发布订阅模式，当数据发生变化时，会循环依赖列表，把所有的 Watcher 都通知一遍
 - Watcher 把自己设置到全局的一个指定位置，然后读取数据，因为读取了数据，所以会触发这个数据的 getter。在 getter 中就能得到当前正在读取数据的 Watcher，并把这个 Watcher 收集到 Dep 中
@@ -357,11 +357,11 @@ export default class Watcher {
 * 判断数据更改前后是否一致，如果数据相等则不进行任何派发更新操作。
 * 新值为对象时，会对该值的属性进行依赖收集过程。
 * 通知该数据收集的watcher依赖,遍历每个watcher进行数据更新,这个阶段是调用该数据依赖收集器的dep.notify方法进行更新的派发。
-* 更新时会将每个watcher推到队列中，等待下一个tick到来时取出每个watcher进行run操作
+* 更新时会将每个watcher推到队列中，等待下一个tick到来时取出每个watcher进行run更新操作
 
 **原理总结**
 
-vue项目初始通过initState初始化数据，通过Observe类给对象数据增加属性__ob__(响应式数据标志)，并且利用Object.defineProperty将数据对象处理成响应式的对象；observe方法检查数据对象是否具有__ob__属性，其实就是检查对象是否已经被处理成响应式，如果没有__ob__属性，则通过new Observe()实例化一个；在数据对象被访问时。Dep进行依赖收集（收集的是当前的数据需要被监听的依赖。比如渲染页面的时候会访问到某些数据，此时这些数据对应的watcher就是渲染watcher,此时收集的依赖就是渲染watcher本身；computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher），在数据被改变时，Dep管理器通过dep.notify()去触发更新，通过遍历依赖管理器中所有的watcher,通知与改变的数据相关的watcher进行update()数据更新
+vue项目初始通过initState初始化数据，通过Observe类给对象数据增加属性__ob__(响应式数据标志)，并且利用Object.defineProperty将数据对象处理成响应式的对象；observe方法检查数据对象是否具有__ob__属性，其实就是检查对象是否已经被处理成响应式，如果没有__ob__属性，则通过new Observe()实例化一个；render函数转换成Vnode时，会访问到定义的data数据。这个时候会触发gettter进行依赖收集。而此时数据收集的依赖就是这个渲染watcher本身。Dep进行依赖收集（收集的是每个属性所依赖的Watcher。比如渲染页面的时候会访问到某些数据，此时这些数据对应的watcher就是渲染watcher,此时收集的依赖就是渲染watcher本身；computed的初始化过程也会遍历computed的每一个属性值，并为每一个属性实例化一个computed watcher），在数据被改变时，Dep管理器通过dep.notify()去触发更新，通过遍历依赖管理器中所有的watcher,通知与改变的数据相关的watcher进行update()数据更新。
 
 
 **vue2.响应式原理缺陷**
